@@ -66,7 +66,7 @@ function options() {
                       updateRole();
                       break;
                   case 'Delete an employee':
-                      deleteEmployee();
+                      removeEmployee();
                       break;
                   case 'EXIT': 
                       exitApp();
@@ -250,7 +250,47 @@ function updateRole() {
   })
 }
 
-//  delete an employee
+
+const removeEmployee = () => {
+  let sql = `SELECT employee.id, employee.first_name, employee.last_name FROM employee`;
+
+  connection.query(sql, (error, response) => {
+    if (error) throw error;
+    let employeeNamesArray = [];
+    response.forEach((employee) => {employeeNamesArray.push(`${employee.first_name} ${employee.last_name}`);});
+
+    inquirer
+      .prompt([
+        {
+          name: 'chosenEmployee',
+          type: 'list',
+          message: 'Which employee would you like to remove?',
+          choices: employeeNamesArray
+        }
+      ])
+      .then((answer) => {
+        let employeeId;
+
+        response.forEach((employee) => {
+          if (
+            answer.chosenEmployee ===
+            `${employee.first_name} ${employee.last_name}`
+          ) {
+            employeeId = employee.id;
+          }
+        });
+
+        let sql = `DELETE FROM employee WHERE id = ?`;
+        connection.query(sql, [employeeId], (error) => {
+          if (error) throw error;
+         
+          options();
+        });
+      });
+  });
+};
+
+/*//  delete an employee
 function deleteEmployee() {
   connection.query(`SELECT * FROM employee`, function (err, res) {
     if (err) return console.log(err);
@@ -264,7 +304,7 @@ function deleteEmployee() {
     }
     
     ]).then(function (data) {
-    connection.query(`DELETE FROM  employee WHERE last_name = ?)`, [data.delete, function (err, res) {
+    connection.query(`DELETE FROM employee WHERE id = ?)`, [data.delete, function (err, res) {
         if (err) return console.log(err);
         console.log('Employee deleted!');
         console.table(res);
@@ -272,9 +312,14 @@ function deleteEmployee() {
     }])
   })
 })
-}
+}*/
 
 // exit the app
 function exitApp() {
   connection.end();
+  console.log('Goodbye!');
 };
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
